@@ -1,13 +1,13 @@
 FROM debian:jessie
 MAINTAINER sticilface <amelvin@gmail.com>
 LABEL org.freenas.interactive="false" 		\
-      org.freenas.version="1.5.0.3501"		\
+      org.freenas.version="3.8"		\
       org.freenas.upgradeable="true"		\
       org.freenas.expose-ports-at-host="true"	\
       org.freenas.autostart="true"		\
       org.freenas.capabilities-add="NET_BROADCAST" \
       org.freenas.web-ui-protocol="http"	\
-      org.freenas.web-ui-port=32400		\
+      org.freenas.web-ui-port=8083		\
       org.freenas.web-ui-path="web"		\
       org.freenas.port-mappings="8083:8083/tcp"			\
       org.freenas.volumes="[					\
@@ -19,7 +19,7 @@ LABEL org.freenas.interactive="false" 		\
       org.freenas.settings="[ 					\
           {							\
               \"env\": \"TZ\",					\
-              \"descr\": \"Plex container Timezone\",		\
+              \"descr\": \"Fhem container Timezone\",		\
               \"optional\": true				\
           },							\
           {							\
@@ -38,16 +38,11 @@ LABEL org.freenas.interactive="false" 		\
               \"optional\": true				\
           },							\
           {							\
-              \"env\": \"PLEX_GID\",				\
-              \"descr\": \"Plex Group ID\",			\
+              \"env\": \"FHEM_GID\",				\
+              \"descr\": \"Fhem Group ID\",			\
               \"optional\": true				\
-          },							\
-          {							\
-              \"env\": \"PLEX_CLAIM\",				\
-              \"descr\": \"Plex Account Token\",		\
-              \"optional\": true				\
-          } 							\
-      ]"
+          }
+       ]"
 
 ENV DEBIAN_FRONTEND noninteractive
 
