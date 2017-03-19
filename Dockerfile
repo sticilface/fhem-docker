@@ -41,7 +41,7 @@ LABEL org.freenas.interactive="false" 		\
               \"env\": \"FHEM_GID\",				\
               \"descr\": \"Fhem Group ID\",			\
               \"optional\": true				\
-          }
+          }  \
        ]"
 
 ENV DEBIAN_FRONTEND noninteractive
