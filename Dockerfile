@@ -1,7 +1,53 @@
 FROM debian:jessie
-
-MAINTAINER michaelatdocker <michael.kunzmann@gmail.com>
-
+MAINTAINER sticilface <amelvin@gmail.com>
+LABEL org.freenas.interactive="false" 		\
+      org.freenas.version="1.5.0.3501"		\
+      org.freenas.upgradeable="true"		\
+      org.freenas.expose-ports-at-host="true"	\
+      org.freenas.autostart="true"		\
+      org.freenas.capabilities-add="NET_BROADCAST" \
+      org.freenas.web-ui-protocol="http"	\
+      org.freenas.web-ui-port=32400		\
+      org.freenas.web-ui-path="web"		\
+      org.freenas.port-mappings="8083:8083/tcp"			\
+      org.freenas.volumes="[					\
+          {							\
+              \"name\": \"/opt/fhem\",				\
+              \"descr\": \"Storage space\"		\
+          }							\
+      ]"							\
+      org.freenas.settings="[ 					\
+          {							\
+              \"env\": \"TZ\",					\
+              \"descr\": \"Plex container Timezone\",		\
+              \"optional\": true				\
+          },							\
+          {							\
+              \"env\": \"ADVERTISE_IP\",			\
+              \"descr\": \"http://<hostIPAddress>:8083/fhem\",	\
+              \"optional\": true				\
+          },							\
+          {							\
+              \"env\": \"ALLOWED_NETWORKS\",			\
+              \"descr\": \"IP/mask[,IP/mask]\",			\
+              \"optional\": true				\
+          },							\
+          {							\
+              \"env\": \"FHEM_UID\",				\
+              \"descr\": \"Fhem User ID\",			\
+              \"optional\": true				\
+          },							\
+          {							\
+              \"env\": \"PLEX_GID\",				\
+              \"descr\": \"Plex Group ID\",			\
+              \"optional\": true				\
+          },							\
+          {							\
+              \"env\": \"PLEX_CLAIM\",				\
+              \"descr\": \"Plex Account Token\",		\
+              \"optional\": true				\
+          } 							\
+      ]"
 
 ENV DEBIAN_FRONTEND noninteractive
 
