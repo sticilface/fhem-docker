@@ -8,22 +8,23 @@ LABEL org.freenas.interactive="false" 		\
       org.freenas.capabilities-add="NET_BROADCAST" \
       org.freenas.web-ui-protocol="http"	\
       org.freenas.web-ui-port=8083		\
-      org.freenas.web-ui-path="web"		\
+      org.freenas.web-ui-path="fhem"		\
       org.freenas.port-mappings="8083:8083/tcp"			\
-      org.freenas.volumes="[					\
-          {							\
-              \"name\": \"/opt/fhem\",				\
-              \"descr\": \"Storage space\"		\
-          }							\
-      ]"							\
-      org.freenas.settings="[ 					\
-          {							\
-              \"env\": \"TZ\",					\
-              \"descr\": \"Fhem container Timezone\",		\
-              \"optional\": true				\
-          },							\
-          {							\
-              \"env\": \"ADVERTISE_IP\",			\
+      org.freenas.volumes="[							\
+          {												\
+              \"name\": \"/opt/fhem\",					\
+              \"descr\": \"Storage space\",				\
+              \"optional\": true						\
+          }												\
+      ]"												\
+      org.freenas.settings="[ 							\
+          {												\
+              \"env\": \"TZ\",							\
+              \"descr\": \"Fhem container Timezone\",	\
+              \"optional\": true						\
+          },											\
+          {												\
+              \"env\": \"ADVERTISE_IP\",				\
               \"descr\": \"http://<hostIPAddress>:8083/fhem\",	\
               \"optional\": true				\
           },							\
