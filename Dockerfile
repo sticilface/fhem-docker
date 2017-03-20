@@ -1,7 +1,7 @@
 FROM debian:jessie
 MAINTAINER sticilface <amelvin@gmail.com>
 LABEL org.freenas.interactive="false" 		\
-      org.freenas.version="3.8.0003"		\
+      org.freenas.version="3.8.004"		\
       org.freenas.upgradeable="true"		\
       org.freenas.expose-ports-at-host="true"	\
       org.freenas.autostart="true"		\
