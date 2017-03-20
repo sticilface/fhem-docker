@@ -1,7 +1,7 @@
 FROM debian:jessie
 MAINTAINER sticilface <amelvin@gmail.com>
 LABEL org.freenas.interactive="false" 		\
-      org.freenas.version="3.8"		\
+      org.freenas.version="3.8.0001"		\
       org.freenas.upgradeable="true"		\
       org.freenas.expose-ports-at-host="true"	\
       org.freenas.autostart="true"		\
@@ -46,6 +46,7 @@ LABEL org.freenas.interactive="false" 		\
        ]"
 
 ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=en_GB.UTF-8 LC_ALL=C.UTF-8 LANGUAGE=en_GB.UTF-8
 ENV TERM xterm
 
 RUN apt-get update
