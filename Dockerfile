@@ -9,7 +9,7 @@ LABEL org.freenas.interactive="false" 		\
       org.freenas.web-ui-protocol="http"	\
       org.freenas.web-ui-port=8083		\
       org.freenas.web-ui-path="fhem"		\
-      org.freenas.port-mappings="8083:8083/tcp,8084:8084/tcp,8085:8085/tcp,8022:8022/tcp,2222:2222/tcp"			\
+      org.freenas.port-mappings="8083:8083/tcp,8084:8084/tcp,8085:8085/tcp"			\
       org.freenas.volumes="[							\
           {												\
               \"name\": \"/opt/fhem\",					\
@@ -46,68 +46,92 @@ LABEL org.freenas.interactive="false" 		\
        ]"
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV LANG=en_GB.UTF-8 LC_ALL=C.UTF-8 LANGUAGE=en_GB.UTF-8
 ENV TERM xterm
+ENV FHEM_HOME /opt/fhem
 
-RUN apt-get update
-RUN apt-get -y --force-yes install wget apt-transport-https nano build-essential
+# FHEM is ran with user `fhem`, uid = 1000
+# If you bind mount a volume from host/volume from a data container, 
+# ensure you use same uid
+RUN useradd -d "$FHEM_HOME" -u 1000 -m -s /bin/bash fhem
+
+# Main pacakges 
+RUN apt-get update && apt-get -y --force-yes install \ 
+    wget  						\
+    apt-transport-https 		\
+    nano build-essential 		\
+#    openssh-server 				\
+#    supervisor 					\
+    telnet  					\
+    && apt-get clean && apt-get autoremove
 
 # Install perl packages
-RUN apt-get -y --force-yes install libalgorithm-merge-perl \
-libclass-isa-perl \
-libcommon-sense-perl \
-libdpkg-perl \
-liberror-perl \
-libfile-copy-recursive-perl \
-libfile-fcntllock-perl \
-libio-socket-ip-perl \
-libio-socket-multicast-perl \
-libjson-perl \
-libjson-xs-perl \
-libmail-sendmail-perl \
-libsocket-perl \
-libswitch-perl \
-libsys-hostname-long-perl \
-libterm-readkey-perl \
-libterm-readline-perl-perl \
-libxml-simple-perl \
-cpanminus
+RUN apt-get -y --force-yes install \
+	libalgorithm-merge-perl 	\
+	libclass-isa-perl 			\
+	libcommon-sense-perl 		\
+	libdpkg-perl 				\
+	liberror-perl 				\
+	libfile-copy-recursive-perl \
+	libfile-fcntllock-perl 		\
+	libio-socket-ip-perl 		\
+	libio-socket-multicast-perl \
+	libjson-perl 				\
+	libjson-xs-perl 			\
+	libmail-sendmail-perl 		\
+	libsocket-perl 				\
+	libswitch-perl 				\
+	libsys-hostname-long-perl 	\
+	libterm-readkey-perl 		\
+	libterm-readline-perl-perl 	\
+	libxml-simple-perl 			\
+	cpanminus					\
+	&& apt-get clean && apt-get autoremove
 
 RUN cpanm Net::MQTT::Simple
 RUN cpanm Net::MQTT::Constants
 
-RUN wget -qO - http://debian.fhem.de/archive.key | apt-key add -
-RUN echo "deb http://debian.fhem.de/nightly/ /" | tee -a /etc/apt/sources.list.d/fhem.list
-RUN apt-get update
-RUN apt-get -y --force-yes install supervisor fhem telnet
-RUN mkdir -p /var/log/supervisor
+# Install and configure fhem.  Avoid .deb file as it creates and screws user setup.
+ADD http://www.dhs-computertechnik.de/downloads/fhem-cvs.tgz /usr/local/lib/fhem.tgz
+RUN cd /opt && tar xvzf /usr/local/lib/fhem.tgz    \
+    && mv fhem fhem-svn 				\
+    && mkdir /opt/fhem 					\
+    && chown fhem:fhem /opt/fhem        
+# Copy init scripts.  
+COPY ./etc/fhem-init.sh /etc/init.d/fhem     
+#RUN cp /opt/fhem-svn/contrib/init-scripts/fhem.3 /etc/init.d/fhem    \
+RUN chmod ugo+x /etc/init.d/fhem   							 \
+	&& update-rc.d fhem defaults		
+
+# Add Tini
+ENV TINI_VERSION v0.8.3
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
+RUN chmod +x /bin/tini
+
+# supervisor
+#RUN mkdir -p /var/log/supervisor
+#COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+#COPY ./etc/copyfhem.sh /etc/copyfhem.sh
+#RUN chmod +x /etc/copyfhem.sh
 
 # sshd on port 2222 and allow root login / password = fhem!
-RUN apt-get -y --force-yes install openssh-server && apt-get clean
-RUN mkdir /var/run/sshd
-RUN sed -i 's/Port 22/Port 2222/g' /etc/ssh/sshd_config
-RUN sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
-RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN echo "root:fhem!" | chpasswd
-#RUN /bin/rm  /etc/ssh/ssh_host_*
-#RUN dpkg-reconfigure openssh-server
+#RUN mkdir /var/run/sshd
+#RUN sed -i 's/Port 22/Port 2222/g' /etc/ssh/sshd_config
+#RUN sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+#RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+#RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+#RUN echo "root:fhem!" | chpasswd
 
-RUN apt-get clean && apt-get autoremove
-
-# fixing locales issue
-# http://konradpodgorski.com/blog/2014/06/23/fixing-locale-problem-debian/
-
+#cleanup  
 RUN echo Europe/London > /etc/timezone && dpkg-reconfigure tzdata
-RUN apt-get install locales  \ 
-  && locale-gen en_GB.UTF-8 \
-  && dpkg-reconfigure --frontend noninteractive locales
 
-COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./etc/start.sh /etc/start.sh
+RUN chmod +x /etc/start.sh
 
 VOLUME ["/opt/fhem"]
-EXPOSE 8083 8084 8085 2222 
+EXPOSE 8083 8084 8085 
 
-#ENTRYPOINT ["/bin/bash"]
+USER fhem
 
-CMD ["/usr/bin/supervisord"]
+ENTRYPOINT ["/bin/tini", "--", "/etc/start.sh"]
+
+
