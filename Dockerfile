@@ -95,6 +95,14 @@ RUN echo "root:fhem!" | chpasswd
 
 RUN apt-get clean && apt-get autoremove
 
+# fixing locales issue
+# http://konradpodgorski.com/blog/2014/06/23/fixing-locale-problem-debian/
+
+RUN echo Europe/London > /etc/timezone && dpkg-reconfigure tzdata
+RUN apt-get install locales  \ 
+  && locale-gen en_GB.UTF-8 \
+  && dpkg-reconfigure --frontend noninteractive locales
+
 COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 VOLUME ["/opt/fhem"]
