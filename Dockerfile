@@ -9,7 +9,7 @@ LABEL org.freenas.interactive="false" 		\
       org.freenas.web-ui-protocol="http"	\
       org.freenas.web-ui-port=8083		\
       org.freenas.web-ui-path="fhem"		\
-      org.freenas.port-mappings="8083:8083/tcp,8084:8084/tcp,8085:8085/tcp,8022:8022/tcp"			\
+      org.freenas.port-mappings="8083:8083/tcp,8084:8084/tcp,8085:8085/tcp,8022:8022/tcp,2222:2222/tcp"			\
       org.freenas.volumes="[							\
           {												\
               \"name\": \"/opt/fhem\",					\
