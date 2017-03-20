@@ -60,7 +60,7 @@ RUN apt-get update && apt-get -y --force-yes install \
     apt-transport-https 		\
     nano build-essential 		\
 #    openssh-server 				\
-#    supervisor 					\
+    supervisor 					\
     telnet  					\
     && apt-get clean && apt-get autoremove
 
@@ -93,25 +93,16 @@ RUN cpanm Net::MQTT::Constants
 # Install and configure fhem.  Avoid .deb file as it creates and screws user setup.
 ADD http://www.dhs-computertechnik.de/downloads/fhem-cvs.tgz /usr/local/lib/fhem.tgz
 RUN cd /opt && tar xvzf /usr/local/lib/fhem.tgz    \
-    && mv fhem fhem-svn 				\
-    && mkdir /opt/fhem 					\
-    && chown fhem:fhem /opt/fhem        
+    && chown -R fhem:fhem /opt/fhem    
+
 # Copy init scripts.  
 COPY ./etc/fhem-init.sh /etc/init.d/fhem     
-#RUN cp /opt/fhem-svn/contrib/init-scripts/fhem.3 /etc/init.d/fhem    \
 RUN chmod ugo+x /etc/init.d/fhem   							 \
 	&& update-rc.d fhem defaults		
 
-# Add Tini
-ENV TINI_VERSION v0.8.3
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
-RUN chmod +x /bin/tini
-
 # supervisor
-#RUN mkdir -p /var/log/supervisor
-#COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-#COPY ./etc/copyfhem.sh /etc/copyfhem.sh
-#RUN chmod +x /etc/copyfhem.sh
+RUN mkdir -p /var/log/supervisor
+COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # sshd on port 2222 and allow root login / password = fhem!
 #RUN mkdir /var/run/sshd
@@ -124,14 +115,8 @@ RUN chmod +x /bin/tini
 #cleanup  
 RUN echo Europe/London > /etc/timezone && dpkg-reconfigure tzdata
 
-COPY ./etc/start.sh /etc/start.sh
-RUN chmod +x /etc/start.sh
-
 VOLUME ["/opt/fhem"]
 EXPOSE 8083 8084 8085 
 
-USER fhem
-
-ENTRYPOINT ["/bin/tini", "--", "/etc/start.sh"]
-
+CMD ["/usr/bin/supervisord"]
 
