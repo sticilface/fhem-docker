@@ -1,24 +1,11 @@
-# Docker Container for FHEM
+docker # Docker Container for FHEM on Freenas Corral. 
 
 Docker image for FHEM based on Debian Jessie
+Inspiration from a variety of fhem docker images.  None of which quite worked as I wanted.  
 
-Run Directly:
+MQTT perl libs installed + `Net::MQTT::Simple` and `Net::MQTT::Constants` 
 
-```
-docker run -d \
-           -p 8083:8083 \
-           michaelatdocker/fhem
-```
+FHEM user created manually as 1000, gid 1000. Your FHEM folder on freenas must have the same uid/gid or 777 permissions. 
 
-It is also possible to move the complete FHEM installation folder outside the container
-and mount it. This way it is straighforward to modify the config with an external editor.
+Mount your existing fhem installations at `/opt/fhem` or leave blank to use fresh install, which will then download on starting of the container. 
 
-```
-docker run -d \
-           -p 8083:8083 \
-           -v /volume/with/fhem:/opt/fhem \
-           michaelatdocker/fhem
-```
-
-When using the container with the external directory on a Synology Diskstation make sure the
-directory has read/write permission for everyone.

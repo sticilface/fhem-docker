@@ -1,7 +1,7 @@
 FROM debian:jessie
-MAINTAINER sticilface <amelvin@gmail.com>
+LABEL maintainer sticilface <amelvin@gmail.com>
 LABEL org.freenas.interactive="false" 		\
-      org.freenas.version="3.8.004"		\
+      org.freenas.version="3.8.005"		\
       org.freenas.upgradeable="true"		\
       org.freenas.expose-ports-at-host="true"	\
       org.freenas.autostart="true"		\
@@ -20,52 +20,50 @@ LABEL org.freenas.interactive="false" 		\
       org.freenas.settings="[ 							\
           {												\
               \"env\": \"TZ\",							\
-              \"descr\": \"Fhem container Timezone\",	\
+              \"descr\": \"Timezone\",	\
               \"optional\": true						\
           },											\
           {												\
               \"env\": \"ADVERTISE_IP\",				\
               \"descr\": \"http://<hostIPAddress>:8083/fhem\",	\
-              \"optional\": true				\
-          },							\
-          {							\
+              \"optional\": true						\
+          },											\
+          {												\
               \"env\": \"ALLOWED_NETWORKS\",			\
               \"descr\": \"IP/mask[,IP/mask]\",			\
-              \"optional\": true				\
-          },							\
-          {							\
-              \"env\": \"FHEM_UID\",				\
-              \"descr\": \"Fhem User ID\",			\
-              \"optional\": true				\
-          },							\
-          {							\
-              \"env\": \"FHEM_GID\",				\
-              \"descr\": \"Fhem Group ID\",			\
-              \"optional\": true				\
-          }  \
+              \"optional\": true						\
+          },											\
+          {												\
+              \"env\": \"FHEM_UID\",					\
+              \"descr\": \"Fhem User ID\",				\
+              \"optional\": true						\
+          },											\
+          {												\
+              \"env\": \"FHEM_GID\",					\
+              \"descr\": \"Fhem Group ID\",				\
+              \"optional\": true						\
+          }  											\
        ]"
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
-ENV FHEM_HOME /opt/fhem
+ENV TZ Europe/London
+ENV FHEM_UID 1000
+
 
 # FHEM is ran with user `fhem`, uid = 1000
 # If you bind mount a volume from host/volume from a data container, 
 # ensure you use same uid
-RUN useradd -d "$FHEM_HOME" -u 1000 -m -s /bin/bash fhem
+RUN useradd -d /opt/fhem -u 1000 -m -s /bin/bash fhem
 
 # Main pacakges 
-RUN apt-get update && apt-get -y --force-yes install \ 
-    wget  						\
+RUN apt-get update && apt-get -y --force-yes install \
+	wget  						\
     apt-transport-https 		\
     nano build-essential 		\
-#    openssh-server 				\
     supervisor 					\
     telnet  					\
-    && apt-get clean && apt-get autoremove
-
 # Install perl packages
-RUN apt-get -y --force-yes install \
 	libalgorithm-merge-perl 	\
 	libclass-isa-perl 			\
 	libcommon-sense-perl 		\
@@ -91,32 +89,24 @@ RUN cpanm Net::MQTT::Simple
 RUN cpanm Net::MQTT::Constants
 
 # Install and configure fhem.  Avoid .deb file as it creates and screws user setup.
-ADD http://www.dhs-computertechnik.de/downloads/fhem-cvs.tgz /usr/local/lib/fhem.tgz
-RUN cd /opt && tar xvzf /usr/local/lib/fhem.tgz    \
-    && chown -R fhem:fhem /opt/fhem    
+# ADD http://www.dhs-computertechnik.de/downloads/fhem-cvs.tgz /usr/local/lib/fhem.tgz
+# RUN cd /opt && tar xvzf /usr/local/lib/fhem.tgz    \
+#     && chown -R fhem:fhem /opt/fhem    
 
-# Copy init scripts.  
+# Copy init scripts for fhem.  
 COPY ./etc/fhem-init.sh /etc/init.d/fhem     
-RUN chmod ugo+x /etc/init.d/fhem   							 \
+RUN chmod ugo+x /etc/init.d/fhem   	\
 	&& update-rc.d fhem defaults		
 
 # supervisor
 RUN mkdir -p /var/log/supervisor
 COPY ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# sshd on port 2222 and allow root login / password = fhem!
-#RUN mkdir /var/run/sshd
-#RUN sed -i 's/Port 22/Port 2222/g' /etc/ssh/sshd_config
-#RUN sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
-#RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-#RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-#RUN echo "root:fhem!" | chpasswd
-
-#cleanup  
-RUN echo Europe/London > /etc/timezone && dpkg-reconfigure tzdata
+COPY ./etc/entrypoint.sh /etc/entrypoint.sh
+RUN chmod +x /etc/entrypoint.sh
 
 VOLUME ["/opt/fhem"]
 EXPOSE 8083 8084 8085 
 
-CMD ["/usr/bin/supervisord"]
+ENTRYPOINT ["/bin/bash", "/etc/entrypoint.sh"]
 
